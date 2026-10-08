@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d0e18">
+  <title>逃離遊戲</title>
+  <style>
+    :root { color-scheme: dark; font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif; color:#f9f3e6; background:#0d0e18; }
+    * { box-sizing:border-box; } body { min-width:320px; min-height:100vh; margin:0; background:radial-gradient(circle at top,#2b2a43,#0d0e18 70%); }
+    button,input { font:inherit; } button { cursor:pointer; }
+    .game { width:min(100%,1280px); margin:auto; padding:16px; }
+    .stage { position:relative; aspect-ratio:3 / 2; overflow:hidden; background:#171827; box-shadow:0 20px 65px #0009; }
+    .art { position:absolute; inset:0; background-position:center; background-size:cover; background-repeat:no-repeat; transition:filter .3s ease; }
+    .title .art,.intro .art { background-image:linear-gradient(#08091455,#08091488),url("assets/intro-red-screen.png"); }
+    .room .art { background-image:linear-gradient(90deg,#11132118,#11132150),url("assets/bedroom.png"); }
+    .house .art { background-image:linear-gradient(#11132218,#11132242),url("assets/hall.png"); }
+    .living-room .art { background-image:linear-gradient(#11132215,#11132245),url("assets/living-room.png"); }
+    .kitchen-room .art { background-image:linear-gradient(#11132215,#11132245),url("assets/kitchen.png"); }
+    .study-room .art { background-image:linear-gradient(#11132215,#11132245),url("assets/study.png"); }
+    .bathroom-room .art { background-image:linear-gradient(#11132215,#11132245),url("assets/bathroom.png"); }
+    .forest-1 .art { background-image:linear-gradient(#07101b12,#07101b38),url("assets/forest-1.png"); }
+    .forest-2 .art { background-image:linear-gradient(#07101b12,#07101b38),url("assets/forest-2.png"); }
+    .forest-3 .art { background-image:linear-gradient(#07101b12,#07101b38),url("assets/forest-3.png"); }
+    .forest-4 .art { background-image:linear-gradient(#07101b12,#07101b38),url("assets/forest-4.png"); }
+    .forest-sign .art { background-image:linear-gradient(#07101b32,#07101b55),url("assets/forest-1.png"); background-size:215%; background-position:50% 68%; }
+    .forest-lost .art { background-image:linear-gradient(#05060e45,#05060e70),url("assets/forest-lost.png"); }
+    .forest-black .art { background:#000; }
+    .ending .art { background-image:linear-gradient(#11132112,#1113213d),url("assets/ending-street.png"); }
+    .hud { position:absolute; z-index:5; top:18px; left:18px; right:18px; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:9px 11px; border:2px solid #e7d7b7; background:#10111bd9; box-shadow:3px 3px #05050a99; backdrop-filter:blur(4px); }
+    .hud p { margin:0; font-weight:800; letter-spacing:.08em; }.button { border:2px solid #eadbc2; padding:8px 11px; color:#fff8ed; background:#191a28dc; font-weight:800; box-shadow:3px 3px #05050a99; }.button:hover,.button:focus-visible { transform:translate(-1px,-1px); filter:brightness(1.15); }.button:active { transform:translate(2px,2px); box-shadow:1px 1px #05050a99; }
+    .goal { position:absolute; z-index:3; top:78px; left:18px; margin:0; padding:7px 10px; border-left:3px solid #e78a71; background:#10111bdc; font-size:.92rem; font-weight:800; letter-spacing:.04em; }
+    .intro .goal,.forest-sign .goal { top:27%; left:50%; width:min(82%,540px); transform:translateX(-50%); padding:18px 20px; border:2px solid #d86b69; background:#160d16dc; box-shadow:0 0 28px #9c303855; color:#ff9b93; font-family:monospace; font-size:clamp(1rem,2.6vw,1.45rem); line-height:1.8; letter-spacing:.11em; text-align:center; text-shadow:0 0 8px #bc343c; white-space:pre-line; }
+    .dialogue { position:absolute; z-index:4; right:18px; bottom:18px; left:18px; min-height:112px; padding:16px 18px; border:2px solid #e8d8bb; background:linear-gradient(100deg,#11111ded,#252238e8); box-shadow:5px 5px #05050a99; backdrop-filter:blur(7px); }
+    .dialogue::before { content:"REC  00:00"; position:absolute; top:8px; right:11px; color:#d87964; font:700 .65rem monospace; letter-spacing:.1em; }.dialogue p { min-height:40px; margin:0 54px 10px 0; line-height:1.7; white-space:pre-line; }.dialogue .button { float:right; border-color:#f3d7a1; background:#bd745b; }
+    .choices { position:absolute; z-index:4; right:20px; bottom:148px; display:grid; gap:8px; max-width:280px; }.choice { min-width:195px; text-align:left; }.choice::before { content:"◆"; margin-right:8px; color:#e78368; }
+    .hotspots { position:absolute; z-index:2; inset:0; }.spot { position:absolute; border:0; background:transparent; color:transparent; cursor:pointer; }.spot:focus-visible { outline:2px solid #f0b279; outline-offset:-2px; }
+    .bed-spot { left:5%; top:56%; width:44%; height:31%; }.desk-spot { left:22%; top:39%; width:25%; height:21%; }.safe-spot { left:50.5%; top:45%; width:11%; height:12%; }.door-spot { right:1%; top:16%; width:15%; height:68%; }
+    /* Hotspots trace the actual visible entrances in assets/hall.png (1264 × 848). */
+    .hall-living { left:0; top:25%; width:28%; height:62%; }
+    .hall-kitchen { left:33.4%; top:28%; width:13.3%; height:55%; }
+    .hall-front-door { left:59.3%; top:35%; width:13.8%; height:37%; }
+    .hall-study { left:76.9%; top:33%; width:5.9%; height:41%; }
+    .hall-bathroom { left:83.2%; top:29%; width:6.3%; height:54%; }
+    .hall-bedroom { left:91.5%; top:20%; width:8.5%; height:71%; }
+    .living-sofa { left:2%; top:47%; width:34%; height:35%; }.living-tv { right:4%; top:42%; width:25%; height:39%; }.living-clock { right:5%; top:13%; width:16%; height:27%; }.living-table { left:36%; top:52%; width:31%; height:27%; }
+    .kitchen-fridge { left:10%; top:38%; width:28%; height:47%; }.kitchen-stove { left:40%; top:46%; width:25%; height:32%; }.kitchen-sink { right:0; top:42%; width:28%; height:43%; }
+    .study-shelf { left:0; top:4%; width:38%; height:84%; }.study-books { left:42%; top:47%; width:34%; height:22%; }.study-drawer { right:0; top:52%; width:25%; height:37%; }
+    .bathroom-toilet { left:20%; top:48%; width:30%; height:40%; }
+    .title .choices { right:50%; bottom:25%; transform:translateX(50%); }.title .choice { min-width:210px; text-align:center; }.title .goal { display:none; }
+    dialog { width:min(90vw,780px); max-height:90vh; padding:0; border:2px solid #eadbc2; color:#f9f3e6; background:#181927; box-shadow:8px 8px #05050a; }.modal::backdrop { background:#05050ac9; backdrop-filter:blur(3px); }.modal-body { position:relative; padding:28px 24px 24px; }.modal-body h2 { margin:0 35px 14px 0; }.close { position:absolute; top:5px; right:8px; border:0; color:#fff8ed; background:transparent; font-size:28px; }.clue { margin:0 0 14px; padding:10px; border-left:3px solid #e78368; background:#27283b; line-height:1.7; }.form { display:grid; gap:12px; }.form input { width:100%; border:2px solid #eadbc2; padding:10px; color:#171724; background:#fff; font-size:1.25rem; letter-spacing:.3em; }.error { color:#ff9a9a; font-weight:800; }
+    .zoom-art { height:min(48vw,370px); margin-bottom:14px; border:2px solid #a99d8f; background-image:url("assets/bedroom.png"); background-repeat:no-repeat; }.bed-zoom { background-position:10% 75%; background-size:240%; }.desk-zoom { background-position:39% 43%; background-size:290%; }.safe-zoom { background-position:63% 51%; background-size:550%; }.door-zoom { background-position:100% 43%; background-size:260%; }.photo-zoom { background-position:4% 70%; background-size:500%; }
+    .detail-copy { margin:0; line-height:1.8; }.take { margin-top:14px; }.inventory { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:9px; padding:0; list-style:none; }.item-card { width:100%; min-height:100%; border:2px solid #67647b; padding:11px; color:#f9f3e6; text-align:left; background:#27283b; }.item-card:hover { border-color:#e78368; }.item-card small { display:block; margin-top:5px; line-height:1.5; color:#d3cbd0; }
+    .choices-modal { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:9px; }.choices-modal .button { text-align:left; }
+    .diary-book { min-height:310px; padding:25px clamp(22px,6vw,70px); color:#342a2e; background:#ddcfb1; box-shadow:inset 0 0 0 7px #b29472; font-family:Georgia,"Noto Serif TC",serif; }.diary-book h3 { margin-top:0; text-align:center; }.diary-book p { line-height:1.9; }.diary-book .date { text-align:right; }.ink-red { color:#a93537; }.ink-green { color:#397143; }.ink-blue { color:#395eaa; }.ink-black { color:#24242a; }.ink-purple { color:#684183; }.ink-orange { color:#bd6e28; }.diary-controls { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:14px; }.page-number { color:#cfc1aa; font-size:.85rem; }
+    @media(max-width:700px) { .game { padding:0; }.stage { min-height:100svh; aspect-ratio:auto; }.room .art { background-position:52% center; }.hud { top:10px; right:10px; left:10px; }.goal { top:67px; left:10px; }.dialogue { right:10px; bottom:10px; left:10px; min-height:145px; }.dialogue p { font-size:.93rem; }.choices { right:14px; bottom:170px; left:14px; max-width:none; }.choice { min-width:0; }.intro .goal { top:23%; }.bed-spot { left:0; top:56%; width:55%; height:31%; }.desk-spot { left:20%; top:39%; width:32%; height:21%; }.safe-spot { left:51%; top:45%; width:15%; height:12%; }.door-spot { width:18%; }.zoom-art { height:42vw; min-height:210px; }.modal-body { padding:28px 16px 16px; } }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <section id="stage" class="stage title" aria-live="polite">
+      <div class="art" aria-hidden="true"></div>
+      <header class="hud"><p id="title">逃離遊戲</p><button id="bag" class="button" type="button">背包 <span id="count">0</span></button></header>
+      <p id="goal" class="goal" hidden></p><div id="hotspots" class="hotspots"></div><div id="choices" class="choices"></div>
+      <section class="dialogue" aria-label="對話"><p id="text"></p><button id="next" class="button" type="button">繼續</button></section>
+    </section>
+  </main>
+  <dialog id="modal" class="modal"><div class="modal-body"><button id="close" class="close" type="button" aria-label="關閉">×</button><div id="content"></div></div></dialog>
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const stage = $("#stage"), choices = $("#choices"), hotspots = $("#hotspots"), text = $("#text"), next = $("#next"), modal = $("#modal"), content = $("#content");
+    const state = { id:Math.floor(Math.random()*1000), items:new Set(), living:false, forest:0, diaryPage:0 };
+    const items = {
+      photo:["合照","床頭櫃上的一張合照：從左至右分別是一個身穿黑色 t 恤的男人、穿著紅色連衣裙的小女孩，以及戴著墨鏡，穿著淺藍色外套的年輕女子。"],
+      diary:["日記","在書桌上找到的日記。"], key:["鑰匙","從保險箱裡拿出來的鑰匙"], note:["字條","茶几上的字條。"],
+      spade:["黑桃 3 撲克牌","你在床底下發現的一張牌，不知道有什麼用。"], heart:["紅心 6 撲克牌","你在時鐘後發現的一張牌，不知道有什麼用。"], diamond:["方塊 8 撲克牌","你在冰箱裡發現的一張牌，不知道有什麼用。"], club:["梅花 A 撲克牌","你在書本裡發現的一張牌，不知道有什麼用。"]
+    };
+    function say(message, canNext=false) { text.textContent=message; next.hidden=!canNext; }
+    function sequence(lines, done) { let index=0; const advance=()=>{ say(lines[index],true); next.onclick=()=>{ index+=1; index<lines.length ? advance() : done(); }; }; advance(); }
+    function draw(kind, goal, buttons=[], points=[]) {
+      stage.className=`stage ${kind}`; $("#goal").textContent=goal; $("#goal").hidden=!goal;
+      choices.replaceChildren(...buttons.map(([label,fn]) => makeButton(label,fn,"button choice")));
+      hotspots.replaceChildren(...points.map(([label,css,fn]) => { const b=makeButton(label,fn,`spot ${css}`); b.setAttribute("aria-label",label); return b; }));
+    }
+    function makeButton(label,fn,className) { const button=document.createElement("button"); button.className=className; button.type="button"; button.textContent=label; button.onclick=fn; return button; }
+    function add(...ids) { ids.forEach((id)=>state.items.add(id)); $("#count").textContent=state.items.size; }
+    function has(id) { return state.items.has(id); }
+    function show(html) { content.innerHTML=html; modal.showModal(); }
+    function closeModal() { modal.close(); }
+    $("#close").onclick=closeModal;
+    $("#bag").onclick=showInventory;
+    function showInventory() {
+      const ids=[...state.items];
+      show(`<h2>背包</h2>${ids.length ? `<ul class="inventory">${ids.map((id)=>`<li><button class="item-card" data-item="${id}"><strong>${items[id][0]}</strong><small>${items[id][1]}</small></button></li>`).join("")}</ul>` : "<p>目前沒有物品。</p>"}`);
+      content.querySelectorAll("[data-item]").forEach((button)=>button.onclick=()=>inspectItem(button.dataset.item));
+    }
+    function inspectItem(id) { if(id==="diary") { showDiary(); return; } if(id==="photo") { show(`<h2>合照</h2><div class="zoom-art photo-zoom"></div><p class="detail-copy">${items.photo[1]}</p>`); return; } if(id==="note") { show(`<h2>茶几上的字條</h2><p class="detail-copy">跟隨我的指引，前往<br>時間定格之處<br>智慧匯集之所<br>炊煙升起之地<br>獲得你正在尋找的事物。</p>`); return; } show(`<h2>${items[id][0]}</h2><p class="detail-copy">${items[id][1]}</p>`); }
+    function start() { $("#title").textContent=`玩家 ${state.id}`; draw("intro",""); sequence(["你睜開眼，發現自己身處一個陌生的房間之中。","牆上用紅色的字跡寫著:"],showTask1); }
+    function showTask1() { draw("intro",`玩家${state.id}進入遊戲\n任務1: 離開房間`); say("",true); next.onclick=enterBedroom; }
+    function enterBedroom() { draw("room","任務 1：離開房間",[],[["床","bed-spot",inspectBed],["書桌","desk-spot",inspectDesk],["保險箱","safe-spot",lock1],["房門","door-spot",inspectDoor]]); sequence(["你環顧四周，散落一地的雜物，櫃子裡擺著無數二次元立牌，就連書桌上也擺著幾本漫畫書。","毫無疑問的，這是一個沉迷二次元的宅男(女)的房間。","看著任務，你決定先搜索一下房間。"],bedroom); }
+    function bedroom() {
+      draw("room","任務 1：離開房間",[],[["床","bed-spot",inspectBed],["書桌","desk-spot",inspectDesk],["保險箱","safe-spot",lock1],["房門","door-spot",inspectDoor]]);
+      say("你想調查：");
+    }
+    function inspectBed() { add("photo","spade"); show(`<h2>床</h2><div class="zoom-art bed-zoom"></div><p class="detail-copy">潔白的床鋪，這大概是整個房間裡最乾淨的部分了。</p><p class="detail-copy">你看到床頭櫃上有一張合照，從左至右分別是一個身穿黑色t恤的男人、穿著紅色連衣裙的小女孩，以及戴著墨鏡，穿著淺藍色外套的年輕女子。</p><p class="detail-copy">你猜這應該是這間房子的主人。</p><p class="detail-copy">你把棉被掀起來看了下床，並沒有什麼發現。然後你蹲下身，在床底發現了一張黑桃3撲克牌。</p>`); say("潔白的床鋪，這大概是整個房間裡最乾淨的部分了。 "); }
+    function inspectDesk() { add("diary"); showDiary(); say("你翻了一下書桌，發現一本日記。稚嫩的筆跡寫著每天發生的事情。你翻了幾頁，發現一個特別的規律。 "); }
+    function inspectDoor() { if(has("key")) { state.returningToHall ? house() : toHouse(); return; } show(`<h2>門</h2><div class="zoom-art door-zoom"></div><p class="detail-copy">很普通的一扇門，有一個鑰匙孔。</p>`); }
+    const diaryPages = [
+      `<p class="date ink-red">星期一　6 月 17 日</p><p class="ink-red">今天下雨，放學的時候爸爸來接我。他看起來很累，可是還是買了草莓果凍給我。</p><p class="ink-red">晚上吃了果凍，好甜。</p>`,
+      `<p class="date ink-green">星期二　6 月 18 日</p><p class="ink-green">窗台的小盆栽長出新葉子了！我幫它澆水，媽媽說不要澆太多，不然根會爛掉。</p><p class="ink-green">今天沒有忘記寫作業。</p>`,
+      `<p class="date ink-blue">星期三　6 月 19 日</p><p class="ink-blue">姊姊今天戴著墨鏡回家。她說這樣比較酷，但我覺得她看起來像電影裡的人。</p><p class="ink-blue">晚上的天空很漂亮。</p>`,
+      `<p class="date ink-black">星期四　6 月 20 日</p><p class="ink-black">爸爸把客廳的時鐘修好了，可是指針還是怪怪的。我偷偷把下午畫的小人貼在背面。</p><p class="ink-black">希望他不要發現。</p>`,
+      `<p class="date ink-purple">星期五　6 月 21 日</p><p class="ink-purple">明天不用上課！我想把新買的紫色筆用完，可是媽媽說寫太多字眼睛會痛。</p><p class="ink-purple">晚安日記。</p>`,
+      `<p class="date ink-orange">星期六　6 月 22 日</p><p class="ink-orange">今天和大家拍了照片。妹妹一直不肯站好，最後還是笑得很好看。</p><p class="ink-orange">冰箱裡什麼都沒有，只有冰冰的空氣。</p>`,
+      `<p class="date ink-orange">星期日　6 月 23 日</p><p class="ink-orange">明天又要上學了。我把最喜歡的撲克牌夾進書裡，這樣就不會被別人拿走。</p><p class="ink-orange">希望下個禮拜也會很順利。</p>`
+    ];
+    function showDiary(page=state.diaryPage) { state.diaryPage=Math.max(0,Math.min(diaryPages.length-1,page)); show(`<h2>日記</h2><article class="diary-book">${diaryPages[state.diaryPage]}</article><div class="diary-controls"><button class="button" id="prev-page" ${state.diaryPage===0?"disabled":""}>← 上一頁</button><span class="page-number">${state.diaryPage+1} / ${diaryPages.length}</span><button class="button" id="next-page" ${state.diaryPage===diaryPages.length-1?"disabled":""}>下一頁 →</button></div>`); $("#prev-page").onclick=()=>showDiary(state.diaryPage-1); $("#next-page").onclick=()=>showDiary(state.diaryPage+1); }
+    function code(title,hint,length,answer,success) { show(`<h2>${title}</h2><p class="clue">${hint}</p><form id="form" class="form"><input autofocus inputmode="numeric" maxlength="${length}" pattern="[0-9]*" aria-label="密碼"><button class="button">解鎖</button><p id="message"></p></form>`); $("#form").onsubmit=(event)=>{event.preventDefault(); if(event.currentTarget.querySelector("input").value===answer) {closeModal();success();} else $("#message").innerHTML='<span class="error">密碼錯誤，請再試一次。</span>';}; }
+    function lock1() { show(`<h2>櫃子</h2><div class="zoom-art safe-zoom"></div><p class="detail-copy">你在一堆立牌裡，發現一個格格不入的保險箱。上面有一個三位數密碼鎖。</p><button class="button take" id="open-code">試著打開保險箱</button>`); $("#open-code").onclick=()=>code("輸入密碼","輸入密碼(輸入三位數字):",3,"413",()=>{add("key");say("你成功打開保險箱，裡面有一個鑰匙。")}); }
+    function toHouse() { closeModal(); draw("room","任務 1：離開房間",[],[["床","bed-spot",inspectBed],["書桌","desk-spot",inspectDesk],["保險箱","safe-spot",lock1],["房門","door-spot",inspectDoor]]); say("你用鑰匙開了門。",true); next.onclick=leaveRoom; }
+    function leaveRoom() { draw("intro",""); say("你離開了房間。",true); next.onclick=seeTask2; }
+    function seeTask2() { say("一出房門，你就看到熟悉的紅色字跡:",true); next.onclick=showTask2; }
+    function showTask2() { draw("intro",`玩家${state.id}達成任務1\n任務2: 離開屋子`); say("",true); next.onclick=enterHouse; }
+    function enterHouse() { sequence(["顯然，離開房間只是一個開始。","你不知道後面還有幾個任務。","為了早點離開這詭異的房子，你開始了下一輪的搜索。"],house); }
+    function house() { state.returningToHall=false; draw("house","任務 2：離開屋子",[],[["客廳","hall-living",living],["廚房","hall-kitchen",kitchen],["大門","hall-front-door",lock2],["書房","hall-study",study],["廁所","hall-bathroom",bathroom],["原本的房間","hall-bedroom",returnBedroom]]); say("你想調查：") }
+    function returnBedroom() { state.returningToHall=true; bedroom(); }
+    function living() { draw("living-room","",[["返回屋內",house]],[["沙發","living-sofa",()=>say("柔軟的沙發，讓人想躺在上面好好地睡覺。")],["電視","living-tv",()=>say("早已被關掉的電視，四周沒有遙控器。")],["時鐘","living-clock",()=>{add("heart");say("分針時針一動也不動，時間好似定格在這一剎那。你拿下時鐘，發現後面貼著一張紅心6撲克牌。 ")}],["茶几","living-table",readNote]]); if(!state.living) { state.living=true; add("note"); say("你來到客廳。你看到茶几上寫著一張字條:"); return; } say("你來到客廳。"); }
+    function readNote() { add("note"); inspectItem("note"); }
+    function kitchen() { draw("kitchen-room","",[["返回屋內",house]],[["冰箱","kitchen-fridge",()=>{add("diamond");say("空無一物的冰箱，只有一張方塊8撲克牌靜靜地躺在中央。你忍不住吐槽: 到底誰會把撲克牌放在冰箱裡?")}],["瓦斯爐","kitchen-stove",()=>say("普通的瓦斯爐，你控制著自己的手不去開啟開關。 ")],["水槽","kitchen-sink",()=>say("乾淨到完全沒有水垢的水槽，可見這水槽的使用次數少的可憐。 ")]]); say("你來到廚房。 "); }
+    function study() { draw("study-room","",[["返回屋內",house]],[["書架","study-shelf",()=>say("各種類別的書都有。你甚至在一個角落裡看到18+的BL漫畫。哇嗚，真刺激。 ")],["桌上的書","study-books",()=>{add("club");say("你拿起桌上的書翻了一下。一張撲克牌掉了出來，是梅花A。 ")}],["抽屜","study-drawer",()=>say("你看到好幾種原子筆整齊的排在抽屜裡，想必它們的主人有著嚴重的強迫症。 ")]]); say("你來到書房。 "); }
+    function bathroom() { draw("bathroom-room","",[["坐下",sitBathroom],["離開",house]],[["馬桶","bathroom-toilet",sitBathroom]]); say("你來到廁所，想起某六字遊戲中，馬桶是個傳送門。"); }
+    function sitBathroom() { choices.replaceChildren(); hotspots.replaceChildren(); say("你忍不住好奇地坐在馬桶上，按下了沖水按鈕。",true); next.onclick=bathroomResult; }
+    function bathroomResult() { const destination=Math.floor(Math.random()*5); if(destination===0) { living(); return; } if(destination===1) { kitchen(); return; } if(destination===2) { study(); return; } if(destination===3) { say("沒有任何事情發生",true); next.onclick=house; return; } lock2(); }
+    function lock2() { show(`<h2>你來到了大門。</h2><p class="detail-copy">這扇大門的門鎖位置有四個符號，分別是梅花、紅心、黑桃、方塊。四符號底下是一個電子螢幕，初始畫面是0000。</p><button class="button take" id="open-lock">試著解開密碼鎖</button>`); $("#open-lock").onclick=()=>code("輸入密碼","輸入密碼(輸入四位數字):",4,"1638",toForest); }
+    function toForest() { closeModal(); state.forest=0; draw("forest-1",""); say("你成功打開大門。",true); next.onclick=arriveForest; }
+    function arriveForest() { draw("forest-1",""); sequence(["走出屋子，首先映入眼簾的是茂密的樹林和兩條岔路。","兩條岔路中間立著一個木牌，你走近一看。","果然，又是熟悉的字跡:"],showTask3); }
+    function showTask3() { draw("forest-sign",`玩家${state.id}達成任務2\n任務3: 走出樹林`); say("",true); next.onclick=forest; }
+    function forest() { const step=state.forest,dirs=step===0?[["右邊",1],["左邊",2]]:[["右邊",1],["中間",2],["左邊",3]],clues=["別跟著月光走。右路正被月光照亮。","中路樹幹綁著褪色紅絲帶。","右路地上有新鮮腳印與小孩塗鴉。","左路盡頭透出街燈般的暖黃光。"], prompts=["眼前有兩條岔路，你要走：", "你向前走，出現三條岔路，你要走：", "你繼續走，出現三條岔路，你要走：", "你繼續走，出現三條岔路，你要走："],buttons=[...dirs.map(([label,value])=>[label,()=>pick(value)]),["觀察周遭",()=>say(clues[step])]]; draw(`forest-${step+1}`,`任務 3：走出樹林（${step+1} / 4）`,buttons); say(prompts[step]); }
+    function pick(value) { const answer=[2,2,1,3];if(value!==answer[state.forest]) {state.forest=0; draw("forest-lost",""); say("你迷失在樹林之中。",true);next.onclick=blackOut;return;}state.forest++;state.forest===4?end():forest(); }
+    function blackOut() { draw("forest-black",""); say("眼前一黑，再次睜眼時又回到了原點。",true); next.onclick=forest; }
+    function end() { draw("ending","遊戲結束"); sequence(["你成功走出樹林，看見熟悉的街道。","一個稚嫩的童聲在你耳邊響起。",`謎之聲: 恭喜玩家${state.id}達成任務3!`,`謎之聲: 遊戲結束!`],()=>choices.replaceChildren(makeButton("重新遊玩",()=>location.reload(),"button choice"))); $("#title").textContent="逃離成功"; }
+    draw("title","",[["開始遊戲",start]]);say("逃離遊戲");
+  </script>
+</body>
+</html>
