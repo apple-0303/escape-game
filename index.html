@@ -48,20 +48,27 @@
     .study-shelf { left:0; top:4%; width:38%; height:84%; }.study-books { left:42%; top:47%; width:34%; height:22%; }.study-drawer { right:0; top:52%; width:25%; height:37%; }
     .bathroom-toilet { left:20%; top:48%; width:30%; height:40%; }
     .title .choices { right:50%; bottom:25%; transform:translateX(50%); }.title .choice { min-width:210px; text-align:center; }.title .goal { display:none; }
-    dialog { width:min(90vw,780px); max-height:90vh; padding:0; border:2px solid #eadbc2; color:#f9f3e6; background:#181927; box-shadow:8px 8px #05050a; }.modal::backdrop { background:#05050ac9; backdrop-filter:blur(3px); }.modal-body { position:relative; padding:28px 24px 24px; }.modal-body h2 { margin:0 35px 14px 0; }.close { position:absolute; top:5px; right:8px; border:0; color:#fff8ed; background:transparent; font-size:28px; }.clue { margin:0 0 14px; padding:10px; border-left:3px solid #e78368; background:#27283b; line-height:1.7; }.form { display:grid; gap:12px; }.form input { width:100%; border:2px solid #eadbc2; padding:10px; color:#171724; background:#fff; font-size:1.25rem; letter-spacing:.3em; }.error { color:#ff9a9a; font-weight:800; }
+    /* world 裝圖片與熱區，拖曳時一起位移；桌機等於整個 stage，手機比螢幕寬。 */
+.world { position:absolute; inset:0; touch-action:none; }
+.title .world,.intro .world,.forest-sign .world,.forest-black .world { inset:0; width:auto; height:auto; }
+html { touch-action:manipulation; }
+.hint { position:absolute; z-index:4; top:42%; left:50%; margin:0; padding:8px 14px; transform:translateX(-50%); border:2px solid #e7d7b7; background:#10111bdc; box-shadow:3px 3px #05050a99; font-weight:800; letter-spacing:.08em; pointer-events:none; animation:hint-fade 3.2s ease forwards; }
+@keyframes hint-fade { 0% { opacity:0; } 12%,75% { opacity:1; } 100% { opacity:0; } }
+
+dialog { width:min(90vw,780px); max-height:90vh; padding:0; border:2px solid #eadbc2; color:#f9f3e6; background:#181927; box-shadow:8px 8px #05050a; }.modal::backdrop { background:#05050ac9; backdrop-filter:blur(3px); }.modal-body { position:relative; padding:28px 24px 24px; }.modal-body h2 { margin:0 35px 14px 0; }.close { position:absolute; top:5px; right:8px; border:0; color:#fff8ed; background:transparent; font-size:28px; }.clue { margin:0 0 14px; padding:10px; border-left:3px solid #e78368; background:#27283b; line-height:1.7; }.form { display:grid; gap:12px; }.form input { width:100%; border:2px solid #eadbc2; padding:10px; color:#171724; background:#fff; font-size:1.25rem; letter-spacing:.3em; }.error { color:#ff9a9a; font-weight:800; }
     .zoom-art { height:min(48vw,370px); margin-bottom:14px; border:2px solid #a99d8f; background-image:url("assets/bedroom.png"); background-repeat:no-repeat; }.bed-zoom { background-position:10% 75%; background-size:240%; }.desk-zoom { background-position:39% 43%; background-size:290%; }.safe-zoom { background-position:63% 51%; background-size:550%; }.door-zoom { background-position:100% 43%; background-size:260%; }.photo-zoom { background-position:4% 70%; background-size:500%; }
     .detail-copy { margin:0; line-height:1.8; }.take { margin-top:14px; }.inventory { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:9px; padding:0; list-style:none; }.item-card { width:100%; min-height:100%; border:2px solid #67647b; padding:11px; color:#f9f3e6; text-align:left; background:#27283b; }.item-card:hover { border-color:#e78368; }.item-card small { display:block; margin-top:5px; line-height:1.5; color:#d3cbd0; }
     .choices-modal { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:9px; }.choices-modal .button { text-align:left; }
     .diary-book { min-height:310px; padding:25px clamp(22px,6vw,70px); color:#342a2e; background:#ddcfb1; box-shadow:inset 0 0 0 7px #b29472; font-family:Georgia,"Noto Serif TC",serif; }.diary-book h3 { margin-top:0; text-align:center; }.diary-book p { line-height:1.9; }.diary-book .date { text-align:right; }.ink-red { color:#a93537; }.ink-green { color:#397143; }.ink-blue { color:#395eaa; }.ink-black { color:#24242a; }.ink-purple { color:#684183; }.ink-orange { color:#bd6e28; }.diary-controls { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:14px; }.page-number { color:#cfc1aa; font-size:.85rem; }
-    @media(max-width:700px) { .game { padding:0; }.stage { min-height:100svh; aspect-ratio:auto; }.room .art { background-position:52% center; }.hud { top:10px; right:10px; left:10px; }.goal { top:67px; left:10px; }.dialogue { right:10px; bottom:10px; left:10px; min-height:145px; }.dialogue p { font-size:.93rem; }.choices { right:14px; bottom:170px; left:14px; max-width:none; }.choice { min-width:0; }.intro .goal { top:23%; }.bed-spot { left:0; top:56%; width:55%; height:31%; }.desk-spot { left:20%; top:39%; width:32%; height:21%; }.safe-spot { left:51%; top:45%; width:15%; height:12%; }.door-spot { width:18%; }.zoom-art { height:42vw; min-height:210px; }.modal-body { padding:28px 16px 16px; } }
+    @media(max-width:700px) { .game { padding:0; }.stage { height:100svh; min-height:0; aspect-ratio:auto; }.world { inset:auto; left:0; top:0; height:100%; width:calc(100svh * 1.5); }.hud { top:10px; right:10px; left:10px; }.goal { top:67px; left:10px; }.dialogue { right:10px; bottom:10px; left:10px; min-height:145px; }.dialogue p { font-size:.93rem; }.choices { right:14px; bottom:170px; left:14px; max-width:none; }.choice { min-width:0; }.intro .goal { top:23%; }.zoom-art { height:42vw; min-height:210px; }.modal-body { padding:28px 16px 16px; } }
   </style>
 </head>
 <body>
   <main class="game">
     <section id="stage" class="stage title" aria-live="polite">
-      <div class="art" aria-hidden="true"></div>
+      <div id="world" class="world"><div class="art" aria-hidden="true"></div><div id="hotspots" class="hotspots"></div></div>
       <header class="hud"><p id="title">逃離遊戲</p><button id="bag" class="button" type="button">背包 <span id="count">0</span></button></header>
-      <p id="goal" class="goal" hidden></p><div id="hotspots" class="hotspots"></div><div id="choices" class="choices"></div>
+      <p id="goal" class="goal" hidden></p><p id="hint" class="hint" hidden>← 拖曳畫面 →</p><div id="choices" class="choices"></div>
       <section class="dialogue" aria-label="對話"><p id="text"></p><button id="next" class="button" type="button">繼續</button></section>
     </section>
   </main>
@@ -69,7 +76,7 @@
   <script>
     const $ = (selector) => document.querySelector(selector);
     const stage = $("#stage"), choices = $("#choices"), hotspots = $("#hotspots"), text = $("#text"), next = $("#next"), modal = $("#modal"), content = $("#content");
-    const state = { id:Math.floor(Math.random()*1000), items:new Set(), living:false, forest:0, diaryPage:0 };
+    const state = { id:Math.floor(Math.random()*1000), items:new Set(), living:false, forest:0, diaryPage:0, hinted:new Set(), dragged:false };
     const items = {
       photo:["合照","床頭櫃上的一張合照：從左至右分別是一個身穿黑色 t 恤的男人、穿著紅色連衣裙的小女孩，以及戴著墨鏡，穿著淺藍色外套的年輕女子。"],
       diary:["日記","在書桌上找到的日記。"], key:["鑰匙","從保險箱裡拿出來的鑰匙"], note:["字條","茶几上的字條。"],
@@ -78,7 +85,7 @@
     function say(message, canNext=false) { text.textContent=message; next.hidden=!canNext; }
     function sequence(lines, done) { let index=0; const advance=()=>{ say(lines[index],true); next.onclick=()=>{ index+=1; index<lines.length ? advance() : done(); }; }; advance(); }
     function draw(kind, goal, buttons=[], points=[]) {
-      stage.className=`stage ${kind}`; $("#goal").textContent=goal; $("#goal").hidden=!goal;
+      const changed=!stage.classList.contains(kind); stage.className=`stage ${kind}`; if(changed) { stopHint(); centerPan(); hintPan(kind); } $("#goal").textContent=goal; $("#goal").hidden=!goal;
       choices.replaceChildren(...buttons.map(([label,fn]) => makeButton(label,fn,"button choice")));
       hotspots.replaceChildren(...points.map(([label,css,fn]) => { const b=makeButton(label,fn,`spot ${css}`); b.setAttribute("aria-label",label); return b; }));
     }
@@ -139,7 +146,33 @@
     function pick(value) { const answer=[2,2,1,3];if(value!==answer[state.forest]) {state.forest=0; draw("forest-lost",""); say("你迷失在樹林之中。",true);next.onclick=blackOut;return;}state.forest++;state.forest===4?end():forest(); }
     function blackOut() { draw("forest-black",""); say("眼前一黑，再次睜眼時又回到了原點。",true); next.onclick=forest; }
     function end() { draw("ending","遊戲結束"); sequence(["你成功走出樹林，看見熟悉的街道。","一個稚嫩的童聲在你耳邊響起。",`謎之聲: 恭喜玩家${state.id}達成任務3!`,`謎之聲: 遊戲結束!`],()=>choices.replaceChildren(makeButton("重新遊玩",()=>location.reload(),"button choice"))); $("#title").textContent="逃離成功"; }
-    draw("title","",[["開始遊戲",start]]);say("逃離遊戲");
+    const world = $("#world"), hint = $("#hint"), pan = { x:0, y:0 };
+let drag = null, wobble = null, suppressClick = false;
+
+function applyPan() { const minX=Math.min(0,stage.clientWidth-world.offsetWidth), minY=Math.min(0,stage.clientHeight-world.offsetHeight); pan.x=Math.min(0,Math.max(minX,pan.x)); pan.y=Math.min(0,Math.max(minY,pan.y)); world.style.transform=`translate(${pan.x}px,${pan.y}px)`; }
+
+function centerPan() { pan.x=(stage.clientWidth-world.offsetWidth)/2; pan.y=(stage.clientHeight-world.offsetHeight)/2; applyPan(); }
+
+function stopHint() { if(wobble) { wobble.cancel(); wobble=null; } hint.hidden=true; }
+
+// 只有「world 比舞台寬」(手機) 才提示；每個場景最多一次，玩家拖過一次後不再提示。
+function hintPan(kind) { if(state.dragged||state.hinted.has(kind)||world.offsetWidth-stage.clientWidth<80) return; state.hinted.add(kind); void hint.offsetWidth; hint.hidden=false; wobble=world.animate([{translate:"0 0"},{translate:"-28px 0"},{translate:"28px 0"},{translate:"0 0"}],{duration:1600,delay:400,easing:"ease-in-out"}); }
+
+hint.onanimationend=()=>{ hint.hidden=true; };
+
+window.addEventListener("resize",applyPan);
+
+world.addEventListener("pointerdown",(e)=>{ stopHint(); drag={ id:e.pointerId, sx:e.clientX, sy:e.clientY, px:pan.x, py:pan.y, active:false }; });
+
+world.addEventListener("pointermove",(e)=>{ if(!drag||e.pointerId!==drag.id) return; const dx=e.clientX-drag.sx, dy=e.clientY-drag.sy; if(!drag.active) { if(Math.hypot(dx,dy)<8) return; drag.active=true; state.dragged=true; world.setPointerCapture(e.pointerId); } pan.x=drag.px+dx; pan.y=drag.py+dy; applyPan(); });
+
+function endDrag(e) { if(!drag||e.pointerId!==drag.id) return; if(drag.active) { suppressClick=true; setTimeout(()=>{ suppressClick=false; },0); } drag=null; }
+
+world.addEventListener("pointerup",endDrag); world.addEventListener("pointercancel",endDrag);
+
+world.addEventListener("click",(e)=>{ if(suppressClick) { e.stopPropagation(); e.preventDefault(); } },true);
+
+draw("title","",[["開始遊戲",start]]);say("逃離遊戲");
   </script>
 </body>
 </html>
